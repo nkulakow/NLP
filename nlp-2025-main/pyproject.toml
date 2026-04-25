@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "stock-analysis-platform"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "crewai[google-genai]>=1.6.1",
+    "finnhub-python>=2.4.23",
+    "markdown-it-py>=3.0.0",
+    "mypy>=1.15.0",
+    "plotly>=6.1.0",
+    "praw>=7.8.1",
+    "python-dotenv>=1.0.0",
+    "reportlab>=4.0.0",
+    "ruff>=0.11.11",
+    "setuptools>=80.4.0",
+    "streamlit>=1.45.1",
+    "ta-lib>=0.6.3",
+    "torch>=2.7.0",
+    "transformers>=4.51.3",
+    "yfinance>=0.2.61",
+]
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "W"]
+extend-select = ["I"]
+ignore = []
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+[tool.mypy]
+ignore_missing_imports = true
