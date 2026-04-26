@@ -1,6 +1,9 @@
 from crewai import Task, Agent
 from enum import Enum
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.crews.shared_memory import SharedAnalysisMemory
 
 
 class TaskType(Enum):
@@ -24,7 +27,13 @@ TASK_CONFIGS = {
             "and Yahoo financial analyses (using fetch_yahoo_analysis_tool). "
             "Focus on identifying the *drivers* of sentiment and the *impact* of news. "
             "Synthesize this information to build a comprehensive picture of the current "
-            "sentiment and news landscape surrounding the stock."
+            "sentiment and news landscape surrounding the stock. "
+            "\n\n"
+            "**IMPORTANT - Data Preservation:**\n"
+            "- Structure all findings with specific metrics, sources, and confidence levels\n"
+            "- Include sentiment scores, key themes, sample quotes, and source citations\n"
+            "- Your data will be reviewed and built upon by other team members\n"
+            "- Provide enough detail for validation and challenge by peers"
         ),
         "expected_output": (
             "A textual report summarizing the current public sentiment, relevant news, "
@@ -33,6 +42,7 @@ TASK_CONFIGS = {
             "2.  Summarize the **most impactful recent news articles** from Yahoo Finance, explaining their potential implications for the stock.\n"
             "3.  Briefly discuss the consensus from Yahoo financial analyses (e.g., earnings estimates, analyst ratings) and **point out any notable shifts or strong opinions**.\n"
             "4.  Conclude with a **short, insightful synthesis** of these findings, focusing on the overall sentiment narrative.\n"
+            "5.  **Include specific data points** with sources for all claims (e.g., 'Sentiment score: 0.65 from 250 Reddit posts on r/investing').\n"
             "The report should be purely textual and focus on insights and highlights, not raw data dumps."
         ),
     },
@@ -43,6 +53,13 @@ TASK_CONFIGS = {
             "(using analyse_technical_indicators_tool). Your primary goal is to **interpret these indicators** "
             "to identify trends, patterns, support/resistance levels, and potential trading signals, "
             "explaining their significance."
+            "\n\n"
+            "**IMPORTANT - Data Preservation:**\n"
+            "- Include specific indicator values with thresholds (e.g., 'RSI: 72 (overbought threshold: 70)')\n"
+            "- Document exact support/resistance price levels with dates\n"
+            "- Cite technical patterns with specific price points and date ranges\n"
+            "- Provide current price, trend direction, and key levels clearly\n"
+            "- Your analysis will be cross-checked by the Trust Agent and challenged by the Sceptic"
         ),
         "expected_output": (
             "A detailed textual technical analysis report for '{stock_symbol}'. This report **must**:\n"
@@ -52,6 +69,7 @@ TASK_CONFIGS = {
             "4.  Clearly state key support and resistance levels and their importance.\n"
             "5.  Highlight any notable bullish or bearish signals or divergences, explaining the reasoning.\n"
             "6.  Conclude with a **summary of the overall technical outlook** for the stock (e.g., bullish, bearish, neutral with key levels to watch).\n"
+            "7.  **Include specific numbers and dates** for all claims (e.g., 'Support at $150 (established 2024-03-15), RSI: 65, MACD positive').\n"
             "The report should be purely textual and focus on insights and highlights, not raw data dumps."
         ),
     },
@@ -62,6 +80,13 @@ TASK_CONFIGS = {
             "earnings reports, and company overview from Yahoo Finance (using analyse_fundamentals_tool). "
             "Your focus is to **interpret this data** to assess its financial health, profitability, "
             "growth prospects, valuation, and overall intrinsic value, highlighting key strengths and weaknesses."
+            "\n\n"
+            "**IMPORTANT - Data Preservation:**\n"
+            "- Include all key financial ratios with specific values (P/E, P/S, D/E, ROE, margins, etc.)\n"
+            "- Compare to historical data and industry averages with precise numbers\n"
+            "- Document revenue, earnings, and cash flow trends with percentages and date ranges\n"
+            "- Provide clear valuation assessment with supporting multiples\n"
+            "- Your metrics will be verified and challenged by peers—ensure precision and context"
         ),
         "expected_output": (
             "A detailed textual fundamental analysis report for '{stock_symbol}'. This report **must**:\n"
@@ -71,6 +96,7 @@ TASK_CONFIGS = {
             "4.  Assess the company's financial health, focusing on liquidity, solvency, and profitability.\n"
             "5.  Provide an **assessment of the stock's valuation** (e.g., appearing overvalued, undervalued, or fairly valued based on the analysis) and explain the reasoning.\n"
             "6.  Conclude with a **summary of the key fundamental strengths and weaknesses** and the overall fundamental outlook for the company.\n"
+            "7.  **Include all specific ratios and values** (e.g., 'P/E: 28.5 vs industry avg 22.1, ROE: 18.2%, Debt-to-Equity: 0.45').\n"
             "The report should be purely textual and focus on insights and highlights, not raw data dumps."
         ),
     },
@@ -102,10 +128,23 @@ TASK_CONFIGS = {
             "Play devil's advocate for '{stock_symbol}' investment thesis. "
             "Identify risks, weaknesses, potential downsides, and challenges to the bullish case. "
             "Challenge assumptions made by other analysts. Be critical and thorough."
+            "\n\n"
+            "**CRITICAL - Data Preservation Required:**\n"
+            "- For EACH risk, cite specific data points from peer analyses (e.g., 'P/E of 35 vs industry avg 22 = 59% premium')\n"
+            "- Do NOT dismiss data; instead contextualize it and challenge interpretations\n"
+            "- Example: 'RSI at 72 suggests overbought, BUT volume confirms strength—justify premium'\n"
+            "- Reference exact metrics, dates, and sources when raising concerns\n"
+            "- Assign probability levels (High/Medium/Low) with reasoning\n"
+            "- Preserve all data fidelity—other team members need this context to validate or refute your challenges"
         ),
         "expected_output": (
             "Critical analysis highlighting risks, weaknesses, potential problems, and downsides "
-            "for '{stock_symbol}'. Focus on what could go wrong and alternative bearish scenarios."
+            "for '{stock_symbol}'. This must include:\n"
+            "1.  Specific risks with evidence citations (e.g., 'P/E premium of 59% creates valuation risk')\n"
+            "2.  Alternative bearish scenarios with supporting logic\n"
+            "3.  Probability assessments (High/Medium/Low) for each risk\n"
+            "4.  Potential mitigation factors if any\n"
+            "Focus on what could go wrong and alternative bearish scenarios, but always cite the underlying data."
         ),
     },
     TaskType.TRUST: {
@@ -113,10 +152,22 @@ TASK_CONFIGS = {
             "Verify data credibility and validate claims about '{stock_symbol}'. "
             "Cross-check information across sentiment, technical, and fundamental analyses. "
             "Confirm source reliability and data accuracy."
+            "\n\n"
+            "**CRITICAL - Data Preservation & Verification:**\n"
+            "- Cross-reference data points across all analyses for contradictions\n"
+            "- Flag any inconsistencies with specific citations (e.g., 'Sceptic cites P/E of 35, but Fundamental reported 33')\n"
+            "- Assess source quality for each major claim\n"
+            "- Document verified claims with confidence levels (High/Medium/Low)\n"
+            "- Preserve complete audit trail—your verification enables confident final recommendation"
         ),
         "expected_output": (
             "Data verification report confirming accuracy and reliability of sources used "
-            "in the analysis of '{stock_symbol}'."
+            "in the analysis of '{stock_symbol}'. Must include:\n"
+            "1.  Verified claims with confidence levels\n"
+            "2.  Any contradictions found with specific citations\n"
+            "3.  Data quality assessment for sources\n"
+            "4.  Unresolved questions or ambiguities\n"
+            "Keep this report detailed and specific—it will guide the final recommendation."
         ),
     },
     TaskType.SYNTHESIS: {
@@ -125,10 +176,17 @@ TASK_CONFIGS = {
             "from Researcher, Technical Analyst, Fundamental Analyst, Sceptic, and Trust Specialist. "
             "Integrate their insights, resolve conflicts, address sceptic concerns, and create a final consensus report. "
             "Provide clear investment recommendation (Buy/Sell/Hold) with price target."
+            "\n\n"
+            "**Data Preservation Throughout Debate:**\n"
+            "- Reference the Trust Agent's verified claims to ensure all recommendations are fact-based\n"
+            "- Acknowledge and address each Sceptic risk with specific data points\n"
+            "- Cite concrete evidence for all conclusions (e.g., 'P/E of 28 with 15% growth justified Buy')\n"
+            "- Preserve data richness—the final report must contain full context from all analyses"
         ),
         "expected_output": (
             "Comprehensive investment report including executive summary, sentiment analysis, technical analysis, "
-            "fundamental analysis, risk assessment, convergences/divergences, catalysts, and final recommendation."
+            "fundamental analysis, risk assessment, convergences/divergences, catalysts, and final recommendation. "
+            "The report must be data-rich with specific metrics and evidence for all claims."
         ),
     },
 }
@@ -138,6 +196,7 @@ def create_task(
     task_type: TaskType,
     agent: Agent,
     context: Optional[list] = None,
+    shared_memory: Optional["SharedAnalysisMemory"] = None,
 ) -> Task:
     """
     Factory function to create tasks based on type.
@@ -146,6 +205,7 @@ def create_task(
         task_type: The type of task to create (TaskType enum).
         agent: The agent that will execute the task.
         context: Optional context list for tasks that require previous outputs.
+        shared_memory: Optional shared memory instance for group chat mode.
 
     Returns:
         A configured Task instance.
@@ -165,6 +225,11 @@ def create_task(
         "expected_output": config["expected_output"],
         "agent": agent,
     }
+
+    # Add shared memory context if provided
+    if shared_memory:
+        memory_context = f"\n\n**SHARED MEMORY STATUS:**\n{shared_memory.get_summary_for_agent()}"
+        task_kwargs["description"] = task_kwargs["description"] + memory_context
 
     # Add context if provided
     if context is not None:
