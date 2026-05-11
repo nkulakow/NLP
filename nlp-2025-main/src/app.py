@@ -106,8 +106,12 @@ group_chat_type = None
 if crew_mode == CrewMode.GROUP_CHAT.value:
     group_chat_type = st.sidebar.radio(
         "Group Chat Type",
-        options=[GroupChatType.LEGACY.value, GroupChatType.SHARED_MEMORY.value],
-        format_func=lambda x: "Legacy" if x == GroupChatType.LEGACY.value else "Shared Memory",
+        options=[GroupChatType.LEGACY.value, GroupChatType.SHARED_MEMORY.value, GroupChatType.ITERATIVE_REFINEMENT.value],
+        format_func=lambda x: {
+            GroupChatType.LEGACY.value: "Legacy",
+            GroupChatType.SHARED_MEMORY.value: "Shared Memory",
+            GroupChatType.ITERATIVE_REFINEMENT.value: "Iterative Refinement"
+        }.get(x, x),
         horizontal=True,
     )
 

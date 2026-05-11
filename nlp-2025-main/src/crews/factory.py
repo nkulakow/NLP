@@ -43,7 +43,7 @@ class StockAnalysisCrewFactory:
                     selected_group_chat_type = GroupChatType(group_chat_type.lower())
                 except ValueError:
                     raise ValueError(
-                        f"Unknown group chat type: {group_chat_type}. Use 'legacy' or 'shared_memory'."
+                        f"Unknown group chat type: {group_chat_type}. Use 'legacy', 'shared_memory', or 'iterative_refinement'."
                     )
             return GroupChatStockAnalysisCrew(config, selected_group_chat_type)
         else:

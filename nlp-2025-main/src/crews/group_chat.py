@@ -23,6 +23,7 @@ class GroupChatType(Enum):
 
     LEGACY = "legacy"
     SHARED_MEMORY = "shared_memory"
+    ITERATIVE_REFINEMENT = "iterative_refinement"
 
 
 class GroupChatStockAnalysisCrew:
@@ -72,6 +73,29 @@ class GroupChatStockAnalysisCrew:
 
         self._initialize_agents(self.shared_memory)
 
+        if self.group_chat_type == GroupChatType.ITERATIVE_REFINEMENT:
+            return self._run_iterative_refinement(stock_symbol, start_time)
+        else:
+            return self._run_standard_workflow(stock_symbol, start_time)
+
+    def _generate_memory_summary(self) -> dict:
+        """Generate a summary of shared memory for diagnostics."""
+        if not self.shared_memory:
+            return {}
+
+        return {
+            "stock_symbol": self.shared_memory.stock_symbol,
+            "sentiment_collected": bool(self.shared_memory.data.get("sentiment", {}).get("overall_sentiment")),
+            "technical_collected": bool(self.shared_memory.data.get("technical", {}).get("price_trend")),
+            "fundamental_collected": bool(self.shared_memory.data.get("fundamental", {}).get("health_score")),
+            "risks_identified": len(self.shared_memory.data.get("risks", [])),
+            "verified_claims": len(self.shared_memory.data.get("verifications", {}).get("verified_claims", [])),
+            "contradictions_found": len(self.shared_memory.data.get("verifications", {}).get("contradictions", [])),
+            "total_updates": len(self.shared_memory.evidence_trail),
+        }
+
+    def _run_standard_workflow(self, stock_symbol: str, start_time: float) -> dict:
+        """Run the standard group chat workflow (legacy or shared memory)."""
         research_task = create_task(
             TaskType.RESEARCH,
             self.researcher,
@@ -155,18 +179,135 @@ class GroupChatStockAnalysisCrew:
                 "data_preservation_enabled": self.group_chat_type == GroupChatType.SHARED_MEMORY,
             }
 
-    def _generate_memory_summary(self) -> dict:
-        """Generate a summary of shared memory for diagnostics."""
-        if not self.shared_memory:
-            return {}
+    def _run_iterative_refinement(self, stock_symbol: str, start_time: float) -> dict:
+        """Run iterative refinement workflow with multiple analysis rounds."""
+        try:
+            # Round 1: Initial Analysis
+            initial_research = create_task(
+                TaskType.RESEARCH,
+                self.researcher,
+                shared_memory=self.shared_memory,
+            )
+            initial_technical = create_task(
+                TaskType.TECHNICAL_ANALYSIS,
+                self.technical_analyst,
+                shared_memory=self.shared_memory,
+            )
+            initial_fundamental = create_task(
+                TaskType.FUNDAMENTAL_ANALYSIS,
+                self.fundamental_analyst,
+                shared_memory=self.shared_memory,
+            )
 
-        return {
-            "stock_symbol": self.shared_memory.stock_symbol,
-            "sentiment_collected": bool(self.shared_memory.data.get("sentiment", {}).get("overall_sentiment")),
-            "technical_collected": bool(self.shared_memory.data.get("technical", {}).get("price_trend")),
-            "fundamental_collected": bool(self.shared_memory.data.get("fundamental", {}).get("health_score")),
-            "risks_identified": len(self.shared_memory.data.get("risks", [])),
-            "verified_claims": len(self.shared_memory.data.get("verifications", {}).get("verified_claims", [])),
-            "contradictions_found": len(self.shared_memory.data.get("verifications", {}).get("contradictions", [])),
-            "total_updates": len(self.shared_memory.evidence_trail),
-        }
+            round1_crew = Crew(
+                agents=[self.researcher, self.technical_analyst, self.fundamental_analyst],
+                tasks=[initial_research, initial_technical, initial_fundamental],
+                manager_agent=self.leader,
+                process=Process.hierarchical,
+                verbose=True,
+                cache=True,
+            )
+
+            round1_result = round1_crew.kickoff(inputs={"stock_symbol": stock_symbol.upper()})
+
+            # Round 2: Refinement based on initial findings
+            refinement_research = create_task(
+                TaskType.RESEARCH_REFINEMENT,
+                self.researcher,
+                context=[initial_research, initial_technical, initial_fundamental],
+                shared_memory=self.shared_memory,
+            )
+            refinement_technical = create_task(
+                TaskType.TECHNICAL_REFINEMENT,
+                self.technical_analyst,
+                context=[initial_research, initial_technical, initial_fundamental],
+                shared_memory=self.shared_memory,
+            )
+            refinement_fundamental = create_task(
+                TaskType.FUNDAMENTAL_REFINEMENT,
+                self.fundamental_analyst,
+                context=[initial_research, initial_technical, initial_fundamental],
+                shared_memory=self.shared_memory,
+            )
+
+            round2_crew = Crew(
+                agents=[self.researcher, self.technical_analyst, self.fundamental_analyst],
+                tasks=[refinement_research, refinement_technical, refinement_fundamental],
+                manager_agent=self.leader,
+                process=Process.hierarchical,
+                verbose=True,
+                cache=True,
+            )
+
+            round2_result = round2_crew.kickoff(inputs={"stock_symbol": stock_symbol.upper()})
+
+            # Final Round: Debate and Synthesis
+            sceptic_task = create_task(
+                TaskType.SCEPTIC,
+                self.sceptic,
+                context=[refinement_research, refinement_technical, refinement_fundamental],
+                shared_memory=self.shared_memory,
+            )
+            trust_task = create_task(
+                TaskType.TRUST,
+                self.trust_agent,
+                context=[refinement_research, refinement_technical, refinement_fundamental],
+                shared_memory=self.shared_memory,
+            )
+
+            synthesis_task = create_task(
+                TaskType.SYNTHESIS,
+                self.leader,
+                context=[refinement_research, refinement_technical, refinement_fundamental, sceptic_task, trust_task],
+                shared_memory=self.shared_memory,
+            )
+
+            final_crew = Crew(
+                agents=[self.sceptic, self.trust_agent],
+                tasks=[sceptic_task, trust_task, synthesis_task],
+                manager_agent=self.leader,
+                process=Process.hierarchical,
+                verbose=True,
+                cache=True,
+            )
+
+            final_result = final_crew.kickoff(inputs={"stock_symbol": stock_symbol.upper()})
+
+            execution_time = time() - start_time
+            memory_summary = self._generate_memory_summary() if self.shared_memory else {}
+
+            combined_report = f"""
+=== ITERATIVE REFINEMENT ANALYSIS FOR {stock_symbol.upper()} ===
+
+ROUND 1 - INITIAL ANALYSIS:
+{round1_result}
+
+ROUND 2 - REFINED ANALYSIS:
+{round2_result}
+
+FINAL ROUND - DEBATE & SYNTHESIS:
+{final_result}
+"""
+
+            return {
+                "mode": "group_chat",
+                "group_chat_type": self.group_chat_type.value,
+                "provider": self.config.provider.value,
+                "execution_time": execution_time,
+                "report": combined_report,
+                "shared_memory_summary": memory_summary,
+                "data_preservation_enabled": False,  # Iterative refinement doesn't use shared memory
+                "rounds_completed": 3,
+            }
+
+        except Exception as e:
+            execution_time = time() - start_time
+            return {
+                "mode": "group_chat",
+                "group_chat_type": self.group_chat_type.value,
+                "provider": self.config.provider.value,
+                "execution_time": execution_time,
+                "report": f"Iterative Refinement mode failed: {str(e)}. Recommend using Sequential mode.",
+                "error": str(e),
+                "data_preservation_enabled": False,
+            }

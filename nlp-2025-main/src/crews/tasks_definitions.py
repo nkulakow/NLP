@@ -15,6 +15,9 @@ class TaskType(Enum):
     SCEPTIC = "sceptic"
     TRUST = "trust"
     SYNTHESIS = "synthesis"
+    RESEARCH_REFINEMENT = "research_refinement"
+    TECHNICAL_REFINEMENT = "technical_refinement"
+    FUNDAMENTAL_REFINEMENT = "fundamental_refinement"
 
 
 # Task configurations
@@ -132,6 +135,45 @@ TASK_CONFIGS = {
         "expected_output": (
             "Comprehensive investment report including executive summary, sentiment analysis, technical analysis, "
             "fundamental analysis, risk assessment, convergences/divergences, catalysts, and final recommendation."
+        ),
+    },
+    TaskType.RESEARCH_REFINEMENT: {
+        "description": (
+            "Review and refine your initial research analysis for '{stock_symbol}' based on the initial findings "
+            "from Technical Analyst and Fundamental Analyst. Look for additional context, verify claims, "
+            "and identify any sentiment drivers that may have been missed. Consider how technical and fundamental "
+            "data might influence or contradict the sentiment narrative you initially identified."
+        ),
+        "expected_output": (
+            "A refined research report that incorporates insights from technical and fundamental analysis. "
+            "Highlight any new sentiment drivers discovered, verify or correct initial findings, "
+            "and explain how technical/fundamental data impacts the overall sentiment assessment."
+        ),
+    },
+    TaskType.TECHNICAL_REFINEMENT: {
+        "description": (
+            "Refine your technical analysis of '{stock_symbol}' by incorporating insights from the initial "
+            "Research and Fundamental analysis. Re-evaluate your technical indicators in light of the "
+            "sentiment landscape and fundamental health. Look for confirmation or contradiction between "
+            "technical signals and the broader market context."
+        ),
+        "expected_output": (
+            "A refined technical analysis that integrates research and fundamental insights. "
+            "Reassess key levels, trends, and signals considering the sentiment and fundamental context. "
+            "Highlight any technical patterns that align with or contradict the broader analysis."
+        ),
+    },
+    TaskType.FUNDAMENTAL_REFINEMENT: {
+        "description": (
+            "Refine your fundamental analysis of '{stock_symbol}' by considering the initial Research "
+            "and Technical analysis findings. Evaluate how market sentiment and technical trends "
+            "might impact your fundamental valuation. Look for catalysts or risks that could affect "
+            "your fundamental assessment."
+        ),
+        "expected_output": (
+            "A refined fundamental analysis that incorporates research and technical insights. "
+            "Reassess valuation metrics, growth prospects, and risk factors in light of sentiment "
+            "and technical trends. Provide updated investment thesis considering all perspectives."
         ),
     },
 }
