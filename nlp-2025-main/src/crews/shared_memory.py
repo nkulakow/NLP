@@ -271,12 +271,12 @@ class SharedAnalysisMemory:
     @property
     def evidence_trail(self) -> List[Dict[str, Any]]:
         """Get evidence trail from data."""
-        return self.data.get("_evidence_trail", [])
+        return self.data.get("evidence_trail", [])
 
     @evidence_trail.setter
     def evidence_trail(self, value: List[Dict[str, Any]]) -> None:
         """Set evidence trail in data."""
-        self.data["_evidence_trail"] = value
+        self.data["evidence_trail"] = value
 
     @staticmethod
     def _truncate_value(value: Any, max_length: int = 200) -> str:

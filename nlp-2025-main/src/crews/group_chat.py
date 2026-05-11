@@ -38,19 +38,18 @@ class GroupChatStockAnalysisCrew:
             api_key=self.config.api_key,
             temperature=self.config.temperature,
         )
-        self._initialize_agents()
 
-    def _initialize_agents(self):
+    def _initialize_agents(self, shared_memory: Optional[SharedAnalysisMemory] = None):
         """Initialize all 6 agents for group chat mode."""
         # Original 3 specialist agents
-        self.researcher = create_researcher_agent(self.llm)
-        self.technical_analyst = create_technical_analyst_agent(self.llm)
-        self.fundamental_analyst = create_fundamental_analyst_agent(self.llm)
+        self.researcher = create_researcher_agent(self.llm, shared_memory)
+        self.technical_analyst = create_technical_analyst_agent(self.llm, shared_memory)
+        self.fundamental_analyst = create_fundamental_analyst_agent(self.llm, shared_memory)
 
         # New 3 agents for debate and synthesis
-        self.sceptic = create_sceptic_agent(self.llm)
-        self.trust_agent = create_trust_agent(self.llm)
-        self.leader = create_leader_agent(self.llm)
+        self.sceptic = create_sceptic_agent(self.llm, shared_memory)
+        self.trust_agent = create_trust_agent(self.llm, shared_memory)
+        self.leader = create_leader_agent(self.llm, shared_memory)
 
     def run(self, stock_symbol: str) -> dict:
         """
@@ -70,6 +69,8 @@ class GroupChatStockAnalysisCrew:
             self.shared_memory = SharedAnalysisMemory(stock_symbol.upper())
         else:
             self.shared_memory = None
+
+        self._initialize_agents(self.shared_memory)
 
         research_task = create_task(
             TaskType.RESEARCH,
