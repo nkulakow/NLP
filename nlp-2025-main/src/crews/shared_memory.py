@@ -126,11 +126,8 @@ class SharedAnalysisMemory:
                 self.data[section] = {}
             self.data[section][key] = value
 
-        # Ensure evidence_trail exists and append to it
-        if "evidence_trail" not in self.data:
-            self.data["evidence_trail"] = []
-
-        self.data["evidence_trail"].append({
+        # Add to evidence trail
+        self.evidence_trail.append({
             "timestamp": timestamp,
             "agent": agent,
             "section": section,
@@ -157,12 +154,7 @@ class SharedAnalysisMemory:
             "identified_by": agent,
             "timestamp": datetime.now().isoformat(),
         })
-
-        # Ensure evidence_trail exists and append to it
-        if "evidence_trail" not in self.data:
-            self.data["evidence_trail"] = []
-
-        self.data["evidence_trail"].append({
+        self.evidence_trail.append({
             "timestamp": datetime.now().isoformat(),
             "agent": agent,
             "section": "risks",
@@ -194,11 +186,7 @@ class SharedAnalysisMemory:
                 "timestamp": datetime.now().isoformat(),
             })
 
-        # Ensure evidence_trail exists and append to it
-        if "evidence_trail" not in self.data:
-            self.data["evidence_trail"] = []
-
-        self.data["evidence_trail"].append({
+        self.evidence_trail.append({
             "timestamp": datetime.now().isoformat(),
             "agent": agent,
             "section": "verifications",
@@ -283,12 +271,12 @@ class SharedAnalysisMemory:
     @property
     def evidence_trail(self) -> List[Dict[str, Any]]:
         """Get evidence trail from data."""
-        return self.data.get("evidence_trail", [])
+        return self.data.get("_evidence_trail", [])
 
     @evidence_trail.setter
     def evidence_trail(self, value: List[Dict[str, Any]]) -> None:
         """Set evidence trail in data."""
-        self.data["evidence_trail"] = value
+        self.data["_evidence_trail"] = value
 
     @staticmethod
     def _truncate_value(value: Any, max_length: int = 200) -> str:

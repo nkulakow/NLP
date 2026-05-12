@@ -15,9 +15,6 @@ class TaskType(Enum):
     SCEPTIC = "sceptic"
     TRUST = "trust"
     SYNTHESIS = "synthesis"
-    RESEARCH_REFINEMENT = "research_refinement"
-    TECHNICAL_REFINEMENT = "technical_refinement"
-    FUNDAMENTAL_REFINEMENT = "fundamental_refinement"
 
 
 # Task configurations
@@ -31,9 +28,12 @@ TASK_CONFIGS = {
             "Focus on identifying the *drivers* of sentiment and the *impact* of news. "
             "Synthesize this information to build a comprehensive picture of the current "
             "sentiment and news landscape surrounding the stock. "
-            "If shared memory is available, store your findings using update_sentiment_memory(key, value, subsection='', reasoning). "
-            "Use empty subsection for top-level sentiment data like overall_sentiment and confidence. "
-            "Write overall_sentiment, confidence, key themes, and supporting evidence into shared memory."
+            "\n\n"
+            "**IMPORTANT - Data Preservation:**\n"
+            "- Structure all findings with specific metrics, sources, and confidence levels\n"
+            "- Include sentiment scores, key themes, sample quotes, and source citations\n"
+            "- Your data will be reviewed and built upon by other team members\n"
+            "- Provide enough detail for validation and challenge by peers"
         ),
         "expected_output": (
             "A textual report summarizing the current public sentiment, relevant news, "
@@ -42,7 +42,8 @@ TASK_CONFIGS = {
             "2.  Summarize the **most impactful recent news articles** from Yahoo Finance, explaining their potential implications for the stock.\n"
             "3.  Briefly discuss the consensus from Yahoo financial analyses (e.g., earnings estimates, analyst ratings) and **point out any notable shifts or strong opinions**.\n"
             "4.  Conclude with a **short, insightful synthesis** of these findings, focusing on the overall sentiment narrative.\n"
-            "If shared memory is enabled, also persist the key sentiment values into shared memory."
+            "5.  **Include specific data points** with sources for all claims (e.g., 'Sentiment score: 0.65 from 250 Reddit posts on r/investing').\n"
+            "The report should be purely textual and focus on insights and highlights, not raw data dumps."
         ),
     },
     TaskType.TECHNICAL_ANALYSIS: {
@@ -51,9 +52,14 @@ TASK_CONFIGS = {
             "historical market data and calculating a wide array of technical indicators "
             "(using analyse_technical_indicators_tool). Your primary goal is to **interpret these indicators** "
             "to identify trends, patterns, support/resistance levels, and potential trading signals, "
-            "explaining their significance. "
-            "If shared memory is available, store your analysis using update_technical_memory(key, value, subsection='', reasoning). "
-            "Write price_trend, overall_outlook, confidence, key levels, and signal summaries into shared memory."
+            "explaining their significance."
+            "\n\n"
+            "**IMPORTANT - Data Preservation:**\n"
+            "- Include specific indicator values with thresholds (e.g., 'RSI: 72 (overbought threshold: 70)')\n"
+            "- Document exact support/resistance price levels with dates\n"
+            "- Cite technical patterns with specific price points and date ranges\n"
+            "- Provide current price, trend direction, and key levels clearly\n"
+            "- Your analysis will be cross-checked by the Trust Agent and challenged by the Sceptic"
         ),
         "expected_output": (
             "A detailed textual technical analysis report for '{stock_symbol}'. This report **must**:\n"
@@ -63,8 +69,8 @@ TASK_CONFIGS = {
             "4.  Clearly state key support and resistance levels and their importance.\n"
             "5.  Highlight any notable bullish or bearish signals or divergences, explaining the reasoning.\n"
             "6.  Conclude with a **summary of the overall technical outlook** for the stock (e.g., bullish, bearish, neutral with key levels to watch).\n"
-            "The report should be purely textual and focus on insights and highlights, not raw data dumps.\n"
-            "If shared memory is enabled, record the core technical findings in shared memory as structured data."
+            "7.  **Include specific numbers and dates** for all claims (e.g., 'Support at $150 (established 2024-03-15), RSI: 65, MACD positive').\n"
+            "The report should be purely textual and focus on insights and highlights, not raw data dumps."
         ),
     },
     TaskType.FUNDAMENTAL_ANALYSIS: {
@@ -73,9 +79,14 @@ TASK_CONFIGS = {
             "and analyzing its financial statements (income, balance sheet, cash flow), "
             "earnings reports, and company overview from Yahoo Finance (using analyse_fundamentals_tool). "
             "Your focus is to **interpret this data** to assess its financial health, profitability, "
-            "growth prospects, valuation, and overall intrinsic value, highlighting key strengths and weaknesses. "
-            "If shared memory is available, store your findings using update_fundamental_memory(key, value, subsection='', reasoning). "
-            "Write valuation_assessment, health_score, overall_outlook, and key financial metrics into shared memory."
+            "growth prospects, valuation, and overall intrinsic value, highlighting key strengths and weaknesses."
+            "\n\n"
+            "**IMPORTANT - Data Preservation:**\n"
+            "- Include all key financial ratios with specific values (P/E, P/S, D/E, ROE, margins, etc.)\n"
+            "- Compare to historical data and industry averages with precise numbers\n"
+            "- Document revenue, earnings, and cash flow trends with percentages and date ranges\n"
+            "- Provide clear valuation assessment with supporting multiples\n"
+            "- Your metrics will be verified and challenged by peers—ensure precision and context"
         ),
         "expected_output": (
             "A detailed textual fundamental analysis report for '{stock_symbol}'. This report **must**:\n"
@@ -85,8 +96,8 @@ TASK_CONFIGS = {
             "4.  Assess the company's financial health, focusing on liquidity, solvency, and profitability.\n"
             "5.  Provide an **assessment of the stock's valuation** (e.g., appearing overvalued, undervalued, or fairly valued based on the analysis) and explain the reasoning.\n"
             "6.  Conclude with a **summary of the key fundamental strengths and weaknesses** and the overall fundamental outlook for the company.\n"
-            "The report should be purely textual and focus on insights and highlights, not raw data dumps.\n"
-            "If shared memory is enabled, record the essential fundamental findings in shared memory as structured data."
+            "7.  **Include all specific ratios and values** (e.g., 'P/E: 28.5 vs industry avg 22.1, ROE: 18.2%, Debt-to-Equity: 0.45').\n"
+            "The report should be purely textual and focus on insights and highlights, not raw data dumps."
         ),
     },
     TaskType.REPORTING: {
@@ -116,26 +127,47 @@ TASK_CONFIGS = {
         "description": (
             "Play devil's advocate for '{stock_symbol}' investment thesis. "
             "Identify risks, weaknesses, potential downsides, and challenges to the bullish case. "
-            "Challenge assumptions made by other analysts. Be critical and thorough. "
-            "If shared memory is available, persist the risks using add_risk_memory(risk_description, evidence, probability, mitigation)."
+            "Challenge assumptions made by other analysts. Be critical and thorough."
+            "\n\n"
+            "**CRITICAL - Data Preservation Required:**\n"
+            "- For EACH risk, cite specific data points from peer analyses (e.g., 'P/E of 35 vs industry avg 22 = 59% premium')\n"
+            "- Do NOT dismiss data; instead contextualize it and challenge interpretations\n"
+            "- Example: 'RSI at 72 suggests overbought, BUT volume confirms strength—justify premium'\n"
+            "- Reference exact metrics, dates, and sources when raising concerns\n"
+            "- Assign probability levels (High/Medium/Low) with reasoning\n"
+            "- Preserve all data fidelity—other team members need this context to validate or refute your challenges"
         ),
         "expected_output": (
             "Critical analysis highlighting risks, weaknesses, potential problems, and downsides "
-            "for '{stock_symbol}'. Focus on what could go wrong and alternative bearish scenarios.\n"
-            "When shared memory is enabled, add these identified risks to shared memory."
+            "for '{stock_symbol}'. This must include:\n"
+            "1.  Specific risks with evidence citations (e.g., 'P/E premium of 59% creates valuation risk')\n"
+            "2.  Alternative bearish scenarios with supporting logic\n"
+            "3.  Probability assessments (High/Medium/Low) for each risk\n"
+            "4.  Potential mitigation factors if any\n"
+            "Focus on what could go wrong and alternative bearish scenarios, but always cite the underlying data."
         ),
     },
     TaskType.TRUST: {
         "description": (
             "Verify data credibility and validate claims about '{stock_symbol}'. "
             "Cross-check information across sentiment, technical, and fundamental analyses. "
-            "Confirm source reliability and data accuracy. "
-            "If shared memory is available, store the verification results using add_verification_memory(claim, verified, reasoning)."
+            "Confirm source reliability and data accuracy."
+            "\n\n"
+            "**CRITICAL - Data Preservation & Verification:**\n"
+            "- Cross-reference data points across all analyses for contradictions\n"
+            "- Flag any inconsistencies with specific citations (e.g., 'Sceptic cites P/E of 35, but Fundamental reported 33')\n"
+            "- Assess source quality for each major claim\n"
+            "- Document verified claims with confidence levels (High/Medium/Low)\n"
+            "- Preserve complete audit trail—your verification enables confident final recommendation"
         ),
         "expected_output": (
             "Data verification report confirming accuracy and reliability of sources used "
-            "in the analysis of '{stock_symbol}'.\n"
-            "When shared memory is enabled, persist verification outcomes to shared memory."
+            "in the analysis of '{stock_symbol}'. Must include:\n"
+            "1.  Verified claims with confidence levels\n"
+            "2.  Any contradictions found with specific citations\n"
+            "3.  Data quality assessment for sources\n"
+            "4.  Unresolved questions or ambiguities\n"
+            "Keep this report detailed and specific—it will guide the final recommendation."
         ),
     },
     TaskType.SYNTHESIS: {
@@ -143,52 +175,18 @@ TASK_CONFIGS = {
             "You are the investment committee leader. Synthesize all perspectives on '{stock_symbol}' "
             "from Researcher, Technical Analyst, Fundamental Analyst, Sceptic, and Trust Specialist. "
             "Integrate their insights, resolve conflicts, address sceptic concerns, and create a final consensus report. "
-            "Provide clear investment recommendation (Buy/Sell/Hold) with price target. "
-            "If shared memory is enabled, consult shared memory and base your recommendation on the documented evidence."
+            "Provide clear investment recommendation (Buy/Sell/Hold) with price target."
+            "\n\n"
+            "**Data Preservation Throughout Debate:**\n"
+            "- Reference the Trust Agent's verified claims to ensure all recommendations are fact-based\n"
+            "- Acknowledge and address each Sceptic risk with specific data points\n"
+            "- Cite concrete evidence for all conclusions (e.g., 'P/E of 28 with 15% growth justified Buy')\n"
+            "- Preserve data richness—the final report must contain full context from all analyses"
         ),
         "expected_output": (
             "Comprehensive investment report including executive summary, sentiment analysis, technical analysis, "
-            "fundamental analysis, risk assessment, convergences/divergences, catalysts, and final recommendation.\n"
-            "When shared memory is enabled, use shared memory data as the evidence basis for your final recommendation."
-        ),
-    },
-    TaskType.RESEARCH_REFINEMENT: {
-        "description": (
-            "Review and refine your initial research analysis for '{stock_symbol}' based on the initial findings "
-            "from Technical Analyst and Fundamental Analyst. Look for additional context, verify claims, "
-            "and identify any sentiment drivers that may have been missed. Consider how technical and fundamental "
-            "data might influence or contradict the sentiment narrative you initially identified."
-        ),
-        "expected_output": (
-            "A refined research report that incorporates insights from technical and fundamental analysis. "
-            "Highlight any new sentiment drivers discovered, verify or correct initial findings, "
-            "and explain how technical/fundamental data impacts the overall sentiment assessment."
-        ),
-    },
-    TaskType.TECHNICAL_REFINEMENT: {
-        "description": (
-            "Refine your technical analysis of '{stock_symbol}' by incorporating insights from the initial "
-            "Research and Fundamental analysis. Re-evaluate your technical indicators in light of the "
-            "sentiment landscape and fundamental health. Look for confirmation or contradiction between "
-            "technical signals and the broader market context."
-        ),
-        "expected_output": (
-            "A refined technical analysis that integrates research and fundamental insights. "
-            "Reassess key levels, trends, and signals considering the sentiment and fundamental context. "
-            "Highlight any technical patterns that align with or contradict the broader analysis."
-        ),
-    },
-    TaskType.FUNDAMENTAL_REFINEMENT: {
-        "description": (
-            "Refine your fundamental analysis of '{stock_symbol}' by considering the initial Research "
-            "and Technical analysis findings. Evaluate how market sentiment and technical trends "
-            "might impact your fundamental valuation. Look for catalysts or risks that could affect "
-            "your fundamental assessment."
-        ),
-        "expected_output": (
-            "A refined fundamental analysis that incorporates research and technical insights. "
-            "Reassess valuation metrics, growth prospects, and risk factors in light of sentiment "
-            "and technical trends. Provide updated investment thesis considering all perspectives."
+            "fundamental analysis, risk assessment, convergences/divergences, catalysts, and final recommendation. "
+            "The report must be data-rich with specific metrics and evidence for all claims."
         ),
     },
 }
@@ -228,9 +226,10 @@ def create_task(
         "agent": agent,
     }
 
-    # Note: Do NOT add shared memory summary to task description at creation time
-    # Tasks should be executed first, then memory summary checked after execution
-    # This prevents showing empty memory status in task instructions
+    # Add shared memory context if provided
+    if shared_memory:
+        memory_context = f"\n\n**SHARED MEMORY STATUS:**\n{shared_memory.get_summary_for_agent()}"
+        task_kwargs["description"] = task_kwargs["description"] + memory_context
 
     # Add context if provided
     if context is not None:
