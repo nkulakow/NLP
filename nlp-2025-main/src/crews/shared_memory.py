@@ -126,8 +126,11 @@ class SharedAnalysisMemory:
                 self.data[section] = {}
             self.data[section][key] = value
 
-        # Add to evidence trail
-        self.evidence_trail.append({
+        # Ensure evidence_trail exists and append to it
+        if "evidence_trail" not in self.data:
+            self.data["evidence_trail"] = []
+
+        self.data["evidence_trail"].append({
             "timestamp": timestamp,
             "agent": agent,
             "section": section,
@@ -154,7 +157,12 @@ class SharedAnalysisMemory:
             "identified_by": agent,
             "timestamp": datetime.now().isoformat(),
         })
-        self.evidence_trail.append({
+
+        # Ensure evidence_trail exists and append to it
+        if "evidence_trail" not in self.data:
+            self.data["evidence_trail"] = []
+
+        self.data["evidence_trail"].append({
             "timestamp": datetime.now().isoformat(),
             "agent": agent,
             "section": "risks",
@@ -186,7 +194,11 @@ class SharedAnalysisMemory:
                 "timestamp": datetime.now().isoformat(),
             })
 
-        self.evidence_trail.append({
+        # Ensure evidence_trail exists and append to it
+        if "evidence_trail" not in self.data:
+            self.data["evidence_trail"] = []
+
+        self.data["evidence_trail"].append({
             "timestamp": datetime.now().isoformat(),
             "agent": agent,
             "section": "verifications",

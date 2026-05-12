@@ -228,10 +228,9 @@ def create_task(
         "agent": agent,
     }
 
-    # Add shared memory context if provided
-    if shared_memory:
-        memory_context = f"\n\n**SHARED MEMORY STATUS:**\n{shared_memory.get_summary_for_agent()}"
-        task_kwargs["description"] = task_kwargs["description"] + memory_context
+    # Note: Do NOT add shared memory summary to task description at creation time
+    # Tasks should be executed first, then memory summary checked after execution
+    # This prevents showing empty memory status in task instructions
 
     # Add context if provided
     if context is not None:
