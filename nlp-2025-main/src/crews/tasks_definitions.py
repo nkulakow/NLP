@@ -31,7 +31,8 @@ TASK_CONFIGS = {
             "Focus on identifying the *drivers* of sentiment and the *impact* of news. "
             "Synthesize this information to build a comprehensive picture of the current "
             "sentiment and news landscape surrounding the stock. "
-            "If shared memory is available, store your findings using update_sentiment_memory(subsection, key, value, reasoning). "
+            "If shared memory is available, store your findings using update_sentiment_memory(key, value, subsection='', reasoning). "
+            "Use empty subsection for top-level sentiment data like overall_sentiment and confidence. "
             "Write overall_sentiment, confidence, key themes, and supporting evidence into shared memory."
         ),
         "expected_output": (
@@ -51,7 +52,7 @@ TASK_CONFIGS = {
             "(using analyse_technical_indicators_tool). Your primary goal is to **interpret these indicators** "
             "to identify trends, patterns, support/resistance levels, and potential trading signals, "
             "explaining their significance. "
-            "If shared memory is available, store your analysis using update_technical_memory(subsection, key, value, reasoning). "
+            "If shared memory is available, store your analysis using update_technical_memory(key, value, subsection='', reasoning). "
             "Write price_trend, overall_outlook, confidence, key levels, and signal summaries into shared memory."
         ),
         "expected_output": (
@@ -73,7 +74,7 @@ TASK_CONFIGS = {
             "earnings reports, and company overview from Yahoo Finance (using analyse_fundamentals_tool). "
             "Your focus is to **interpret this data** to assess its financial health, profitability, "
             "growth prospects, valuation, and overall intrinsic value, highlighting key strengths and weaknesses. "
-            "If shared memory is available, store your findings using update_fundamental_memory(subsection, key, value, reasoning). "
+            "If shared memory is available, store your findings using update_fundamental_memory(key, value, subsection='', reasoning). "
             "Write valuation_assessment, health_score, overall_outlook, and key financial metrics into shared memory."
         ),
         "expected_output": (

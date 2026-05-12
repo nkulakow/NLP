@@ -11,21 +11,21 @@ from crewai.tools import tool
 def make_update_sentiment_memory_tool(shared_memory):
     @tool
     def update_sentiment_memory(
-        subsection: str,
         key: str,
         value: str,
+        subsection: str = "",
         reasoning: str = "",
     ) -> str:
         """Update sentiment section in shared memory."""
         shared_memory.update(
             "sentiment",
-            subsection,
+            subsection if subsection else None,
             key,
             value,
             agent="Researcher",
             reasoning=reasoning,
         )
-        return f"Updated sentiment {subsection}.{key} = {value}"
+        return f"Updated sentiment {subsection}.{key} = {value}" if subsection else f"Updated sentiment {key} = {value}"
 
     return update_sentiment_memory
 
@@ -33,21 +33,21 @@ def make_update_sentiment_memory_tool(shared_memory):
 def make_update_technical_memory_tool(shared_memory):
     @tool
     def update_technical_memory(
-        subsection: str,
         key: str,
         value: str,
+        subsection: str = "",
         reasoning: str = "",
     ) -> str:
         """Update technical analysis section in shared memory."""
         shared_memory.update(
             "technical",
-            subsection,
+            subsection if subsection else None,
             key,
             value,
             agent="Technical Analyst",
             reasoning=reasoning,
         )
-        return f"Updated technical {subsection}.{key} = {value}"
+        return f"Updated technical {subsection}.{key} = {value}" if subsection else f"Updated technical {key} = {value}"
 
     return update_technical_memory
 
@@ -55,21 +55,21 @@ def make_update_technical_memory_tool(shared_memory):
 def make_update_fundamental_memory_tool(shared_memory):
     @tool
     def update_fundamental_memory(
-        subsection: str,
         key: str,
         value: str,
+        subsection: str = "",
         reasoning: str = "",
     ) -> str:
         """Update fundamental analysis section in shared memory."""
         shared_memory.update(
             "fundamental",
-            subsection,
+            subsection if subsection else None,
             key,
             value,
             agent="Fundamental Analyst",
             reasoning=reasoning,
         )
-        return f"Updated fundamental {subsection}.{key} = {value}"
+        return f"Updated fundamental {subsection}.{key} = {value}" if subsection else f"Updated fundamental {key} = {value}"
 
     return update_fundamental_memory
 
