@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import talib as ta
 import yfinance as yf
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
 class ChartBuilder:
@@ -24,7 +25,7 @@ class ChartBuilder:
     def load_and_process_data(ticker: str, time_period: str) -> pd.DataFrame:
         """Load and process stock data."""
         period_config = ChartBuilder.PERIOD_MAPPING.get(time_period, ChartBuilder.PERIOD_MAPPING["1mo"])
-        
+
         data = yf.download(
             ticker,
             period=period_config["period"],
@@ -32,25 +33,36 @@ class ChartBuilder:
             auto_adjust=True,
             progress=False,
         )
-        
+
         # Handle MultiIndex columns (multiple tickers) vs single ticker
         if isinstance(data.columns, pd.MultiIndex):
             data = data.xs(ticker, axis=1, level=1)
-        
+
         # Timezone handling
-        if data.index.tzinfo is None:
+        if data.index.tz is None:
             data.index = data.index.tz_localize("UTC")
-        data.index = data.index.tz_convert("US/Eastern")
+
+        try:
+            eastern_tz = ZoneInfo("US/Eastern")
+        except ZoneInfoNotFoundError:
+            try:
+                eastern_tz = ZoneInfo("America/New_York")
+            except ZoneInfoNotFoundError:
+                eastern_tz = None
+
+        if eastern_tz is not None:
+            data.index = data.index.tz_convert(eastern_tz)
+
         data.reset_index(inplace=True)
         data.rename(columns={"Date": "Datetime"}, inplace=True)
-        
+
         return data
 
     @staticmethod
     def add_indicators(data: pd.DataFrame, indicators: dict) -> pd.DataFrame:
         """Add technical indicators to dataframe."""
         close_prices = data["Close"].to_numpy().flatten()
-        
+
         if indicators.get("SMA 20"):
             data["SMA_20"] = ta.SMA(close_prices, timeperiod=20)
         if indicators.get("SMA 50"):
@@ -63,7 +75,7 @@ class ChartBuilder:
             data["EMA_50"] = ta.EMA(close_prices, timeperiod=50)
         if indicators.get("Bollinger Bands"):
             data["BB_Upper"], data["BB_Middle"], data["BB_Lower"] = ta.BBANDS(close_prices)
-        
+
         return data
 
     @staticmethod
@@ -76,7 +88,7 @@ class ChartBuilder:
     ) -> go.Figure:
         """Build chart with indicators from data."""
         fig = go.Figure()
-        
+
         # Add price chart
         if chart_type == "Candlestick":
             fig.add_trace(
@@ -99,7 +111,7 @@ class ChartBuilder:
                     line=dict(color="blue"),
                 )
             )
-        
+
         for ma_col in ["SMA_20", "SMA_50", "SMA_200", "EMA_20", "EMA_50"]:
             if ma_col in data.columns:
                 indicator_name = ma_col.replace("_", " ")
@@ -113,7 +125,7 @@ class ChartBuilder:
                             line=dict(width=2),
                         )
                     )
-        
+
         if "BB_Upper" in data.columns and indicators.get("Bollinger Bands"):
             fig.add_trace(
                 go.Scatter(
@@ -135,7 +147,7 @@ class ChartBuilder:
                     fillcolor="rgba(255,0,0,0.1)",
                 )
             )
-        
+
         fig.update_layout(
             title=f"{ticker} {time_period.upper()} Chart",
             xaxis_title="Time",
@@ -144,7 +156,7 @@ class ChartBuilder:
             hovermode="x unified",
             template="plotly_white",
         )
-        
+
         return fig
 
     @staticmethod
