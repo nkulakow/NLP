@@ -25,6 +25,7 @@ class SharedAnalysisMemory:
 
         self.data: Dict[str, Any] = {
             "stock_symbol": stock_symbol,
+            "_evidence_trail": [],  # Initialize evidence trail to avoid property getter issues
             "sentiment": {
                 "reddit_analysis": {
                     "summary": None,
@@ -89,7 +90,6 @@ class SharedAnalysisMemory:
                 "contradictions": [],  # Data contradictions found
                 "verified_claims": [],  # Claims confirmed across sources
             },
-            "evidence_trail": [],  # All updates with timestamps and sources
         }
 
     def update(
@@ -126,8 +126,8 @@ class SharedAnalysisMemory:
                 self.data[section] = {}
             self.data[section][key] = value
 
-        # Add to evidence trail
-        self.evidence_trail.append({
+        # Add to evidence trail - properly persist through direct data access
+        self.data["_evidence_trail"].append({
             "timestamp": timestamp,
             "agent": agent,
             "section": section,
@@ -154,7 +154,7 @@ class SharedAnalysisMemory:
             "identified_by": agent,
             "timestamp": datetime.now().isoformat(),
         })
-        self.evidence_trail.append({
+        self.data["_evidence_trail"].append({
             "timestamp": datetime.now().isoformat(),
             "agent": agent,
             "section": "risks",
@@ -186,7 +186,7 @@ class SharedAnalysisMemory:
                 "timestamp": datetime.now().isoformat(),
             })
 
-        self.evidence_trail.append({
+        self.data["_evidence_trail"].append({
             "timestamp": datetime.now().isoformat(),
             "agent": agent,
             "section": "verifications",
