@@ -199,19 +199,7 @@ def create_task(
     shared_memory: Optional["SharedAnalysisMemory"] = None,
 ) -> Task:
     """
-    Factory function to create tasks based on type.
-
-    Args:
-        task_type: The type of task to create (TaskType enum).
-        agent: The agent that will execute the task.
-        context: Optional context list for tasks that require previous outputs.
-        shared_memory: Optional shared memory instance for group chat mode.
-
-    Returns:
-        A configured Task instance.
-
-    Raises:
-        ValueError: If task_type is not a valid TaskType.
+    Factory function to create tasks with forced Shared Memory Tool usage.
     """
     if not isinstance(task_type, TaskType):
         raise ValueError(f"Invalid task type: {task_type}. Must be a TaskType enum value.")
@@ -220,18 +208,51 @@ def create_task(
     if not config:
         raise ValueError(f"No configuration found for task type: {task_type}")
 
+    description = config["description"]
+    expected_output = config["expected_output"]
+
+    # --- SHARED MEMORY LOGIC ---
+    # 1. Define which agents are primary writers
+    writing_tasks = [
+        TaskType.RESEARCH,
+        TaskType.TECHNICAL_ANALYSIS,
+        TaskType.FUNDAMENTAL_ANALYSIS,
+        TaskType.SCEPTIC,
+        TaskType.TRUST
+    ]
+
+    # 2. READ instruction (Universal)
+    memory_instr = (
+        "\n\n**MANDATORY TOOL USAGE:**\n"
+        "- **TO READ:** ALWAYS start by calling `memory_tool()` (with no arguments) "
+        "to see the current progress of your teammates.\n"
+    )
+
+    # 3. WRITE instruction (Task Specific)
+    if task_type in writing_tasks:
+        category_map = {
+            TaskType.RESEARCH: "sentiment",
+            TaskType.TECHNICAL_ANALYSIS: "technical",
+            TaskType.FUNDAMENTAL_ANALYSIS: "fundamental",
+            TaskType.SCEPTIC: "risks",
+            TaskType.TRUST: "verifications"
+        }
+        cat = category_map.get(task_type, "verifications")
+
+        memory_instr += (
+            f"- **TO WRITE:** BEFORE finishing, you MUST use `memory_tool` providing "
+            f"the 'category' (use '{cat}'), a specific 'key', and the 'value' (your findings). "
+            f"Example: memory_tool(category='{cat}', key='metric_name', value='metric_value')\n"
+        )
+
+    description += memory_instr
+
     task_kwargs = {
-        "description": config["description"],
-        "expected_output": config["expected_output"],
+        "description": description,
+        "expected_output": expected_output,
         "agent": agent,
     }
 
-    # Add shared memory context if provided
-    if shared_memory:
-        memory_context = f"\n\n**SHARED MEMORY STATUS:**\n{shared_memory.get_summary_for_agent()}"
-        task_kwargs["description"] = task_kwargs["description"] + memory_context
-
-    # Add context if provided
     if context is not None:
         task_kwargs["context"] = context
 

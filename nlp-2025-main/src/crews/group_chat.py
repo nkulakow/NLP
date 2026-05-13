@@ -11,6 +11,7 @@ from src.crews.agents_definitions import (
     create_trust_agent,
     create_leader_agent,
 )
+from src.tools.shard_memory_tools import create_memory_tools, SHARED_MEMORY
 from src.crews.tasks_definitions import create_task, TaskType
 from src.crews.shared_memory import SharedAnalysisMemory
 from src.config import LLMConfig
@@ -26,18 +27,18 @@ class GroupChatStockAnalysisCrew:
             api_key=self.config.api_key,
             temperature=self.config.temperature,
         )
-        self.shared_memory: SharedAnalysisMemory = None
 
-    def _initialize_agents(self, shared_memory: SharedAnalysisMemory):
+    def _initialize_agents(self, stock_symbol: str):
         """Initialize all 6 agents for group chat mode."""
+        tools = create_memory_tools(stock_symbol)
         # Original 3 specialist agents
-        self.researcher = create_researcher_agent(self.llm)
-        self.technical_analyst = create_technical_analyst_agent(self.llm)
-        self.fundamental_analyst = create_fundamental_analyst_agent(self.llm)
+        self.researcher = create_researcher_agent(self.llm, extra_tools=tools)
+        self.technical_analyst = create_technical_analyst_agent(self.llm, extra_tools=tools)
+        self.fundamental_analyst = create_fundamental_analyst_agent(self.llm, extra_tools=tools)
 
         # New 3 agents for debate and synthesis
-        self.sceptic = create_sceptic_agent(self.llm)
-        self.trust_agent = create_trust_agent(self.llm)
+        self.sceptic = create_sceptic_agent(self.llm, extra_tools=tools)
+        self.trust_agent = create_trust_agent(self.llm, extra_tools=tools)
         self.leader = create_leader_agent(self.llm)
 
     def run(self, stock_symbol: str) -> dict:
@@ -55,45 +56,44 @@ class GroupChatStockAnalysisCrew:
         start_time = time()
 
         # Create shared memory for this analysis
-        self.shared_memory = SharedAnalysisMemory(stock_symbol)
 
         # Initialize agents with shared memory context
-        self._initialize_agents(self.shared_memory)
+        self._initialize_agents(stock_symbol)
 
         # Create tasks with shared memory context
         research_task = create_task(
             TaskType.RESEARCH,
             self.researcher,
-            shared_memory=self.shared_memory
+            shared_memory=SHARED_MEMORY
         )
         technical_task = create_task(
             TaskType.TECHNICAL_ANALYSIS,
             self.technical_analyst,
-            shared_memory=self.shared_memory
+            shared_memory=SHARED_MEMORY
         )
         fundamental_task = create_task(
             TaskType.FUNDAMENTAL_ANALYSIS,
             self.fundamental_analyst,
-            shared_memory=self.shared_memory
+            shared_memory=SHARED_MEMORY
         )
         sceptic_task = create_task(
             TaskType.SCEPTIC,
             self.sceptic,
             context=[research_task, technical_task, fundamental_task],
-            shared_memory=self.shared_memory
+            shared_memory=SHARED_MEMORY
         )
         trust_task = create_task(
             TaskType.TRUST,
             self.trust_agent,
             context=[research_task, technical_task, fundamental_task],
-            shared_memory=self.shared_memory
+            shared_memory=SHARED_MEMORY
         )
 
         synthesis_task = create_task(
             TaskType.SYNTHESIS,
             self.leader,
             context=[research_task, technical_task, fundamental_task, sceptic_task, trust_task],
-            shared_memory=self.shared_memory
+            shared_memory=SHARED_MEMORY
         )
 
         crew = Crew(
@@ -146,16 +146,16 @@ class GroupChatStockAnalysisCrew:
 
     def _generate_memory_summary(self) -> dict:
         """Generate a summary of shared memory for diagnostics."""
-        if not self.shared_memory:
+        if not SHARED_MEMORY:
             return {}
 
         return {
-            "stock_symbol": self.shared_memory.stock_symbol,
-            "sentiment_collected": bool(self.shared_memory.data.get("sentiment", {}).get("overall_sentiment")),
-            "technical_collected": bool(self.shared_memory.data.get("technical", {}).get("price_trend")),
-            "fundamental_collected": bool(self.shared_memory.data.get("fundamental", {}).get("health_score")),
-            "risks_identified": len(self.shared_memory.data.get("risks", [])),
-            "verified_claims": len(self.shared_memory.data.get("verifications", {}).get("verified_claims", [])),
-            "contradictions_found": len(self.shared_memory.data.get("verifications", {}).get("contradictions", [])),
-            "total_updates": len(self.shared_memory.evidence_trail),
+            "stock_symbol": SHARED_MEMORY.stock_symbol,
+            "sentiment_collected": bool(SHARED_MEMORY.data.get("sentiment", {}).get("overall_sentiment")),
+            "technical_collected": bool(SHARED_MEMORY.data.get("technical", {}).get("price_trend")),
+            "fundamental_collected": bool(SHARED_MEMORY.data.get("fundamental", {}).get("health_score")),
+            "risks_identified": len(SHARED_MEMORY.data.get("risks", [])),
+            "verified_claims": len(SHARED_MEMORY.data.get("verifications", {}).get("verified_claims", [])),
+            "contradictions_found": len(SHARED_MEMORY.data.get("verifications", {}).get("contradictions", [])),
+            "total_updates": len(SHARED_MEMORY.evidence_trail),
         }

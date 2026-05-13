@@ -9,8 +9,12 @@ from src.tools.finnhub_sentiment_tool import analyse_finnhub_sentiment
 from src.tools.alphavantage_tools import analyse_alphavantage_sentiment
 
 
-def create_researcher_agent(llm: LLM) -> Agent:
+def create_researcher_agent(llm: LLM, extra_tools: list | None = None) -> Agent:
     """Create Researcher agent for data gathering and sentiment analysis."""
+    tools = [analyse_finnhub_sentiment, analyse_alphavantage_sentiment, fetch_yahoo_news, fetch_yahoo_analysis]
+    if extra_tools:
+        tools.extend(extra_tools)
+
     return Agent(
         role="Senior Stock Market Researcher",
         goal="Gather and analyze comprehensive data about {stock_symbol} with structured findings that team members will reference",
@@ -21,15 +25,19 @@ def create_researcher_agent(llm: LLM) -> Agent:
             "Include specific metrics, sources, and confidence levels in your findings."
         ),
         llm=llm,
-        tools=[analyse_finnhub_sentiment, analyse_alphavantage_sentiment, fetch_yahoo_news, fetch_yahoo_analysis],
+        tools=tools,
         verbose=True,
         memory=True,
         allow_code_execution=False,
     )
 
 
-def create_technical_analyst_agent(llm: LLM) -> Agent:
+def create_technical_analyst_agent(llm: LLM, extra_tools: list | None = None) -> Agent:
     """Create Technical Analyst agent."""
+    tools = [analyse_technical_indicators]
+    if extra_tools:
+        tools.extend(extra_tools)
+
     return Agent(
         role="Expert Technical Analyst",
         goal="Perform an in-depth technical analysis on {stock_symbol} with key levels, trends, and signals clearly documented",
@@ -40,14 +48,18 @@ def create_technical_analyst_agent(llm: LLM) -> Agent:
             "You document support/resistance levels, technical signals, and price trends clearly with specific values and dates. "
             "Include indicator values, thresholds, and exact price levels so other team members can validate and challenge your analysis."
         ),
-        tools=[analyse_technical_indicators],
+        tools=tools,
         llm=llm,
         allow_code_execution=False,
     )
 
 
-def create_fundamental_analyst_agent(llm: LLM) -> Agent:
+def create_fundamental_analyst_agent(llm: LLM, extra_tools: list | None = None) -> Agent:
     """Create Fundamental Analyst agent."""
+    tools = [analyse_fundamentals]
+    if extra_tools:
+        tools.extend(extra_tools)
+
     return Agent(
         role="Senior Fundamental Analyst",
         goal="Conduct a comprehensive fundamental analysis of {stock_symbol} with financial metrics, valuation, and health scores",
@@ -58,14 +70,18 @@ def create_fundamental_analyst_agent(llm: LLM) -> Agent:
             "You structure your findings with clear metrics, ratios, and valuations. "
             "Include all specific numbers and comparisons so the team can evaluate the company holistically and verify your work."
         ),
-        tools=[analyse_fundamentals],
+        tools=tools,
         llm=llm,
         allow_code_execution=False,
     )
 
 
-def create_reporter_agent(llm: LLM) -> Agent:
+def create_reporter_agent(llm: LLM, extra_tools: list | None = None) -> Agent:
     """Create Reporter/Investment Strategist agent."""
+    tools = []
+    if extra_tools:
+        tools.extend(extra_tools)
+
     return Agent(
         role="Chief Investment Strategist",
         goal="Synthesize all analyses to create a definitive investment report on {stock_symbol}",
@@ -73,12 +89,17 @@ def create_reporter_agent(llm: LLM) -> Agent:
         memory=True,
         backstory="As a seasoned investment strategist with 20 years of experience, you weave complex financial data into compelling investment narratives.",
         llm=llm,
+        tools=tools,
         allow_code_execution=False,
     )
 
 
-def create_sceptic_agent(llm: LLM) -> Agent:
+def create_sceptic_agent(llm: LLM, extra_tools: list | None = None) -> Agent:
     """Create Sceptic (Devil's Advocate) agent for group chat."""
+    tools = []
+    if extra_tools:
+        tools.extend(extra_tools)
+
     return Agent(
         role="Devil's Advocate - Sceptic",
         goal=(
@@ -94,15 +115,19 @@ def create_sceptic_agent(llm: LLM) -> Agent:
             "Assign probability levels (High/Medium/Low) to each risk with reasoning."
         ),
         llm=llm,
-        tools=[],
+        tools=tools,
         verbose=True,
         memory=True,
         allow_code_execution=False,
     )
 
 
-def create_trust_agent(llm: LLM) -> Agent:
+def create_trust_agent(llm: LLM, extra_tools: list | None = None) -> Agent:
     """Create Trust/Data Verification Specialist agent for group chat."""
+    tools = []
+    if extra_tools:
+        tools.extend(extra_tools)
+
     return Agent(
         role="Data Verification Specialist - Trust Builder",
         goal=(
@@ -117,15 +142,19 @@ def create_trust_agent(llm: LLM) -> Agent:
             "Your verification enables the team to have confidence in the final recommendation."
         ),
         llm=llm,
-        tools=[],
+        tools=tools,
         verbose=True,
         memory=True,
         allow_code_execution=False,
     )
 
 
-def create_leader_agent(llm: LLM) -> Agent:
+def create_leader_agent(llm: LLM, extra_tools: list | None = None) -> Agent:
     """Create Leader/Discussion Moderator agent for group chat."""
+    tools = []
+    if extra_tools:
+        tools.extend(extra_tools)
+
     return Agent(
         role="Discussion Moderator & Chief Synthesizer",
         goal=(
@@ -143,7 +172,7 @@ def create_leader_agent(llm: LLM) -> Agent:
             "Cite specific metrics and evidence for all conclusions to maintain data richness in the final report."
         ),
         llm=llm,
-        tools=[],
+        tools=tools,
         verbose=True,
         memory=True,
         allow_code_execution=False,
