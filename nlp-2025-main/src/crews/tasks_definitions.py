@@ -245,7 +245,8 @@ def create_task(
             f"Example: memory_tool(category='{cat}', key='metric_name', value='metric_value')\n"
         )
 
-    description += memory_instr
+    if task_type != TaskType.SYNTHESIS:
+        description += memory_instr
 
     task_kwargs = {
         "description": description,

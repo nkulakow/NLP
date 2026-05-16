@@ -92,8 +92,7 @@ class GroupChatStockAnalysisCrew:
         synthesis_task = create_task(
             TaskType.SYNTHESIS,
             self.leader,
-            context=[research_task, technical_task, fundamental_task, sceptic_task, trust_task],
-            shared_memory=SHARED_MEMORY
+            context=[research_task, technical_task, fundamental_task, sceptic_task, trust_task]
         )
 
         crew = Crew(
