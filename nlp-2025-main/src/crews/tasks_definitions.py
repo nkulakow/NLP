@@ -197,7 +197,7 @@ def create_task(
     task_type: TaskType,
     agent: Agent,
     context: Optional[list] = None,
-    mode: Optional[CrewMode] = CrewMode.SEQUENTIAL,
+    use_shared_memory: bool = False,
 ) -> Task:
     """
     Factory function to create tasks with forced Shared Memory Tool usage.
@@ -246,7 +246,7 @@ def create_task(
             f"Example: memory_tool(category='{cat}', key='metric_name', value='metric_value')\n"
         )
 
-    if mode == CrewMode.GROUP_CHAT and task_type != TaskType.SYNTHESIS:
+    if use_shared_memory and task_type != TaskType.SYNTHESIS:
         description += memory_instr
 
     task_kwargs = {

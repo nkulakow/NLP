@@ -13,7 +13,6 @@ from src.crews.agents_definitions import (
 )
 from src.tools.shard_memory_tools import create_memory_tools, SHARED_MEMORY
 from src.crews.tasks_definitions import create_task, TaskType
-from src.crews.factory import CrewMode
 from src.config import LLMConfig
 
 
@@ -65,32 +64,32 @@ class GroupChatStockAnalysisCrew:
         research_task = create_task(
             TaskType.RESEARCH,
             self.researcher,
-            mode=CrewMode.GROUP_CHAT,
+            use_shared_memory=True,
             shared_memory=SHARED_MEMORY
         )
         technical_task = create_task(
             TaskType.TECHNICAL_ANALYSIS,
             self.technical_analyst,
-            mode=CrewMode.GROUP_CHAT,
+            use_shared_memory=True,
             shared_memory=SHARED_MEMORY
         )
         fundamental_task = create_task(
             TaskType.FUNDAMENTAL_ANALYSIS,
             self.fundamental_analyst,
-            mode=CrewMode.GROUP_CHAT,
+            use_shared_memory=True,
             shared_memory=SHARED_MEMORY
         )
         sceptic_task = create_task(
             TaskType.SCEPTIC,
             self.sceptic,
-            mode=CrewMode.GROUP_CHAT,
+            use_shared_memory=True,
             context=[research_task, technical_task, fundamental_task],
             shared_memory=SHARED_MEMORY
         )
         trust_task = create_task(
             TaskType.TRUST,
             self.trust_agent,
-            mode=CrewMode.GROUP_CHAT,
+            use_shared_memory=True,
             context=[research_task, technical_task, fundamental_task],
             shared_memory=SHARED_MEMORY
         )
@@ -98,7 +97,7 @@ class GroupChatStockAnalysisCrew:
         synthesis_task = create_task(
             TaskType.SYNTHESIS,
             self.leader,
-            mode=CrewMode.GROUP_CHAT,
+            use_shared_memory=True,
             context=[research_task, technical_task, fundamental_task, sceptic_task, trust_task]
         )
 
