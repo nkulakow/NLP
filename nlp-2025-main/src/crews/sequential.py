@@ -10,7 +10,6 @@ from src.crews.agents_definitions import (
 )
 from src.crews.tasks_definitions import create_task, TaskType
 from src.config import LLMConfig
-from src.config import LLMProvider
 
 
 class SequentialStockAnalysisCrew:
@@ -21,14 +20,12 @@ class SequentialStockAnalysisCrew:
 
         # Wymuszenie prefiksu ollama/, jeśli dostawcą jest ollama
         model_name = self.config.model_sequential
-        if self.config.provider == LLMProvider.OLLAMA and not model_name.startswith("ollama/"):
-            model_name = f"ollama/{model_name}"
 
         api_key_placeholder = self.config.api_key if self.config.api_key else "ollama"
 
         self.llm = LLM(
             provider=self.config.provider.value,
-            model=model_name,                  # Używamy bezpiecznej zmiennej
+            model=model_name,
             api_key=api_key_placeholder,
             base_url=self.config.base_url,
             temperature=0.2
