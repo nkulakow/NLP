@@ -65,33 +65,28 @@ class GroupChatStockAnalysisCrew:
             TaskType.RESEARCH,
             self.researcher,
             use_shared_memory=True,
-            shared_memory=SHARED_MEMORY
         )
         technical_task = create_task(
             TaskType.TECHNICAL_ANALYSIS,
             self.technical_analyst,
             use_shared_memory=True,
-            shared_memory=SHARED_MEMORY
         )
         fundamental_task = create_task(
             TaskType.FUNDAMENTAL_ANALYSIS,
             self.fundamental_analyst,
             use_shared_memory=True,
-            shared_memory=SHARED_MEMORY
         )
         sceptic_task = create_task(
             TaskType.SCEPTIC,
             self.sceptic,
             use_shared_memory=True,
             context=[research_task, technical_task, fundamental_task],
-            shared_memory=SHARED_MEMORY
         )
         trust_task = create_task(
             TaskType.TRUST,
             self.trust_agent,
             use_shared_memory=True,
             context=[research_task, technical_task, fundamental_task],
-            shared_memory=SHARED_MEMORY
         )
 
         synthesis_task = create_task(
