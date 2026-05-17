@@ -1,6 +1,7 @@
 from crewai import Task, Agent
 from enum import Enum
 from typing import Optional, TYPE_CHECKING
+from src.crews.factory import CrewMode
 
 if TYPE_CHECKING:
     from src.crews.shared_memory import SharedAnalysisMemory
@@ -196,7 +197,7 @@ def create_task(
     task_type: TaskType,
     agent: Agent,
     context: Optional[list] = None,
-    shared_memory: Optional["SharedAnalysisMemory"] = None,
+    mode: Optional[CrewMode] = CrewMode.SEQUENTIAL,
 ) -> Task:
     """
     Factory function to create tasks with forced Shared Memory Tool usage.
@@ -245,7 +246,7 @@ def create_task(
             f"Example: memory_tool(category='{cat}', key='metric_name', value='metric_value')\n"
         )
 
-    if task_type != TaskType.SYNTHESIS:
+    if mode == CrewMode.GROUP_CHAT and task_type != TaskType.SYNTHESIS:
         description += memory_instr
 
     task_kwargs = {
