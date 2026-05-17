@@ -1,7 +1,6 @@
 from crewai import Task, Agent
 from enum import Enum
 from typing import Optional, TYPE_CHECKING
-from src.crews.factory import CrewMode
 
 if TYPE_CHECKING:
     from src.crews.shared_memory import SharedAnalysisMemory
