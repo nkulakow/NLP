@@ -10,6 +10,7 @@ from src.crews.agents_definitions import (
 )
 from src.crews.tasks_definitions import create_task, TaskType
 from src.config import LLMConfig
+from src.config import LLMProvider
 
 
 class SequentialStockAnalysisCrew:
@@ -17,10 +18,20 @@ class SequentialStockAnalysisCrew:
 
     def __init__(self, config: LLMConfig):
         self.config = config
+
+        # Wymuszenie prefiksu ollama/, jeśli dostawcą jest ollama
+        model_name = self.config.model_sequential
+        if self.config.provider == LLMProvider.OLLAMA and not model_name.startswith("ollama/"):
+            model_name = f"ollama/{model_name}"
+
+        api_key_placeholder = self.config.api_key if self.config.api_key else "ollama"
+
         self.llm = LLM(
-            model=self.config.model_sequential,
-            api_key=self.config.api_key,
-            temperature=0.2,
+            provider=self.config.provider.value,
+            model=model_name,                  # Używamy bezpiecznej zmiennej
+            api_key=api_key_placeholder,
+            base_url=self.config.base_url,
+            temperature=0.2
         )
         self._initialize_agents_and_tasks()
 
@@ -53,6 +64,7 @@ class SequentialStockAnalysisCrew:
         Returns:
             Dictionary with mode, provider, execution_time, and report
         """
+        # raise RuntimeError(f"{self.llm.model}, {self.llm.api_key}, {self.llm.base_url}")
         start_time = time()
         result = self.crew.kickoff(inputs={"stock_symbol": stock_symbol.upper()})
         execution_time = time() - start_time

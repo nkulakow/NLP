@@ -26,6 +26,7 @@ class GroupChatStockAnalysisCrew:
             model=self.config.model_group_chat,
             api_key=self.config.api_key,
             temperature=self.config.temperature,
+            base_url=self.config.base_url
         )
 
     def _initialize_agents(self, stock_symbol: str):

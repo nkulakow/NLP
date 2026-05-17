@@ -14,6 +14,7 @@ class LLMProvider(Enum):
 
     GEMINI = "gemini"
     OPENAI = "openai"
+    OLLAMA = "ollama"
 
 
 class LLMConfig:
@@ -24,7 +25,7 @@ class LLMConfig:
         Initialize LLM configuration.
 
         Args:
-            provider: "gemini" or "openai"
+            provider: "gemini", "openai", or "ollama" (local)
 
         Raises:
             ValueError: If provider is not supported or API key is missing
@@ -39,6 +40,8 @@ class LLMConfig:
 
     def _load_api_key(self):
         """Load API key from environment."""
+        self.api_key = None
+        self.base_url = None
         if self.provider == LLMProvider.GEMINI:
             self.api_key = os.getenv("GEMINI_API_KEY")
             if not self.api_key:
@@ -47,6 +50,9 @@ class LLMConfig:
             self.api_key = os.getenv("OPENAI_API_KEY")
             if not self.api_key:
                 raise ValueError("OPENAI_API_KEY not found in environment variables")
+        elif self.provider == LLMProvider.OLLAMA:
+            self.base_url = "http://localhost:11434"
+
 
     def _set_model_and_params(self):
         """Set model name and default parameters based on provider."""
@@ -57,6 +63,10 @@ class LLMConfig:
         elif self.provider == LLMProvider.OPENAI:
             self.model_sequential = "gpt-4o-mini"
             self.model_group_chat = "gpt-4o-mini"
+            self.temperature = 0.5
+        elif self.provider == LLMProvider.OLLAMA:
+            self.model_sequential = "ollama/qwen2.5:14b"
+            self.model_group_chat = "ollama/qwen2.5:14b"
             self.temperature = 0.5
 
 
