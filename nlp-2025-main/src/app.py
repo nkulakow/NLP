@@ -10,6 +10,43 @@ from src.config import get_default_provider, LLMProvider
 from src.utils.pdf_exporter import PDFReportExporter
 from src.utils.chart_builder import ChartBuilder
 from src.utils.report_evaluator import ReportEvaluator
+from src.auth import init_db, verify_user, check_and_increment_limit
+
+# Initialize database structural tables
+init_db()
+
+# Initialize session states for authentication
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+    st.session_state.username = None
+
+# Enforce login screen if unauthenticated
+if not st.session_state.authenticated:
+    st.title("Secure Agentic Analysis System")
+
+    with st.form("login_form"):
+        username_input = st.text_input("Username")
+        password_input = st.text_input("Password", type="password")
+        submit_btn = st.form_submit_button("Log In")
+
+        if submit_btn:
+            if verify_user(username_input, password_input):
+                st.session_state.authenticated = True
+                st.session_state.username = username_input
+                st.success("Login successful!")
+                st.rerun()
+            else:
+                st.error("Invalid Username or Password.")
+
+    st.stop()  # Critical: Prevents execution of the application below this point
+
+# --- BEYOND THIS POINT REQUIRES SUCCESSFUL LOGIN ---
+st.sidebar.success(f"Logged in as: **{st.session_state.username}**")
+
+if st.sidebar.button("Log Out"):
+    st.session_state.authenticated = False
+    st.session_state.username = None
+    st.rerun()
 
 INTERVAL_MAPPING = [
     {"period": "1d", "interval": "1m"},
@@ -147,19 +184,31 @@ if sidebar_col1.button("Update", type="primary", use_container_width=True):
     st.session_state.selected_indicators = indicators
 
 if sidebar_col2.button("Generate report", type="primary", use_container_width=True):
-    with st.spinner("Running multi-agent analysis…"):
-        try:
-            crew = StockAnalysisCrewFactory.create(crew_mode, llm_provider)
-            result = crew.run(ticker)
+    if not ticker:
+        st.sidebar.warning("Please provide a stock symbol (e.g., AAPL) first.")
+    else:
+        # 1. Check and apply SQLite rate limiting logic
+        is_allowed, current_usage, max_limit = check_and_increment_limit(st.session_state.username)
 
-            report_md = format_markdown(str(result["report"]))
-            report_cleaned = escape_markdown_specials(report_md)
-            st.session_state.report = report_cleaned
-            st.session_state.report_mode = result["mode"]
-            st.session_state.report_provider = result["provider"]
-            st.session_state.execution_time = result["execution_time"]
-        except ValueError as e:
-            st.error(f"Configuration Error: {str(e)}\n\nPlease ensure API keys are set in your .env file.")
+        if not is_allowed:
+            st.sidebar.error(f"⛔ Request Denied! Rate limit reached: {current_usage}/{max_limit} actions in the last 24h.")
+        else:
+            # 2. Proceed if limit verification passes
+            with st.spinner(f"⏳ Verification passed ({current_usage}/{max_limit}). Running multi-agent analysis…"):
+                try:
+                    crew = StockAnalysisCrewFactory.create(crew_mode, llm_provider)
+                    result = crew.run(ticker)
+
+                    report_md = format_markdown(str(result["report"]))
+                    report_cleaned = escape_markdown_specials(report_md)
+                    st.session_state.report = report_cleaned
+                    st.session_state.report_mode = result["mode"]
+                    st.session_state.report_provider = result["provider"]
+                    st.session_state.execution_time = result["execution_time"]
+
+                    st.rerun() # Refresh layout to display newly generated report metadata
+                except ValueError as e:
+                    st.error(f"Configuration Error: {str(e)}\n\nPlease ensure API keys are set in your .env file.")
 
 if st.session_state.stock_metrics is not None:
     last_close = st.session_state.stock_metrics["last_close"]
